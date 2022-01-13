@@ -2,9 +2,9 @@
   "name": "rtl-test-generator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --jsx react-jsx"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,20 @@
   "bugs": {
     "url": "https://github.com/nitaiaharoni1/rtl-test-generator/issues"
   },
-  "homepage": "https://github.com/nitaiaharoni1/rtl-test-generator#readme"
+  "homepage": "https://github.com/nitaiaharoni1/rtl-test-generator#readme",
+  "dependencies": {
+    "@testing-library/react": "^12.1.2",
+    "caller-path": "^4.0.0",
+    "fs": "^0.0.1-security",
+    "handlebars": "^4.7.7",
+    "js-beautify": "^1.14.0",
+    "lodash": "^4.17.21",
+    "react": "^17.0.2",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.178",
+    "@types/node": "^17.0.8",
+    "@types/react": "^17.0.38"
+  }
 }

@@ -1,13 +1,21 @@
 /* eslint-disable no-param-reassign, max-len */
-import { generateDiffQuerySelector, generateDiffVariableName, generateQuerySelector, generateVariableName, parseClassNameCleanCss, shouldIgnoreDiff, valuesDelta } from 'rtl-test-generator/utils/helpers';
-import { functionTestContentTemplate } from 'rtl-test-generator/templates';
-import { MODIFIED_TEXT_ACTION } from 'rtl-test-generator/utils/constants';
-import { ITest } from 'rtl-test-generator/interfaces/TestParams';
+import {
+  generateDiffQuerySelector,
+  generateDiffVariableName,
+  generateQuerySelector,
+  generateVariableName,
+  parseClassNameCleanCss,
+  shouldIgnoreDiff,
+  valuesDelta
+} from './utils/helpers';
+import { functionTestContentTemplate } from './templates';
+import { MODIFIED_TEXT_ACTION } from './utils/constants';
+import { ITest } from './interfaces/TestParams';
 import Handlebars from 'handlebars';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 // @ts-ignore
 import { DiffDOM } from 'diff-dom';
-import { IDiff } from 'rtl-test-generator/interfaces/IDiff';
+import { IDiff } from './interfaces/IDiff';
 
 const dd = new DiffDOM({
   postVirtualDiffApply: (object: any) => {

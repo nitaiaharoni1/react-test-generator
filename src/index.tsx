@@ -4,15 +4,15 @@ import fs from 'fs';
 import { render } from '@testing-library/react';
 import { ComponentType, JSXElementConstructor, ReactElement } from 'react';
 import Handlebars from 'handlebars';
-import { fullTestTemplate } from 'rtl-test-generator/templates';
-import { generateSmokeTest } from 'rtl-test-generator/smokeTest';
-import { generateFunctionTests } from 'rtl-test-generator/functionTest';
+import { fullTestTemplate } from './templates';
+import { generateSmokeTest } from './smokeTest';
+import { generateFunctionTests } from './functionTest';
 import { cloneDeep, uniqBy } from 'lodash';
-import { IProps } from 'rtl-test-generator/interfaces/IProps';
-import { ITest } from 'rtl-test-generator/interfaces/TestParams';
+import { IProps } from './interfaces/IProps';
+import { ITest } from './interfaces/TestParams';
 import callerPath from 'caller-path';
-import { getResultText } from 'rtl-test-generator/utils/helpers';
-import { ITestOptions } from 'rtl-test-generator/interfaces/ITestOptions';
+import { getResultText } from './utils/helpers';
+import { ITestOptions } from './interfaces/ITestOptions';
 
 const beautify = require('js-beautify').html;
 
@@ -75,8 +75,11 @@ const iteratePropsArray = (propsArray: IProps[], Component: JSXElementConstructo
 
 export const getDescribes = (propsArray: IProps[], Component: JSXElementConstructor<any>, wrappers?: ComponentType[]) => {
   let describes;
-  if (!wrappers || wrappers?.length === 0) describes = iteratePropsArray(propsArray, Component).flat();
-  else describes = wrappers?.map((wrapper) => iteratePropsArray(propsArray, Component, wrapper)).flat();
+  if (!wrappers || wrappers?.length === 0) {
+    describes = iteratePropsArray(propsArray, Component).flat();
+  } else {
+    describes = wrappers?.map((wrapper) => iteratePropsArray(propsArray, Component, wrapper)).flat();
+  }
   return describes;
 };
 

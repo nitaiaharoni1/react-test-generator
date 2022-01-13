@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { IRenderOptions } from 'rtl-test-generator/interfaces/IRenderOptions';
+import { IRenderOptions } from './IRenderOptions';
 
 export interface IRender {
   component: ReactElement,

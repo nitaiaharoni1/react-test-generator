@@ -1,5 +1,5 @@
 import { ComponentType } from 'react';
-import { IProps } from 'rtl-test-generator/interfaces/IProps';
+import { IProps } from '../interfaces/IProps';
 
 export interface ITestOptions {
   wrappers?: ComponentType[],

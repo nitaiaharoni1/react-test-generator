@@ -1,6 +1,10 @@
-import { MODIFIED_ATTRIBUTE_ACTION, TESTED_DIFF_ACTIONS, TESTED_DIFF_ATTRIBUTE_NAMES } from 'rtl-test-generator/utils/constants';
+import {
+  MODIFIED_ATTRIBUTE_ACTION,
+  TESTED_DIFF_ACTIONS,
+  TESTED_DIFF_ATTRIBUTE_NAMES
+} from '../utils/constants';
 import { camelCase } from 'lodash';
-import { IDiff } from 'rtl-test-generator/interfaces/IDiff';
+import { IDiff } from '../interfaces/IDiff';
 // @ts-ignore
 import { v4 as uuidv4 } from 'uuid';
 

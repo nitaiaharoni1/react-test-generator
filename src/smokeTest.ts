@@ -1,7 +1,7 @@
-import { smokeTestContentTemplate } from 'rtl-test-generator/templates';
-import { ITest } from 'rtl-test-generator/interfaces/TestParams';
+import { smokeTestContentTemplate } from './templates';
+import { ITest } from './interfaces/TestParams';
 import Handlebars from 'handlebars';
-import { generateVariableName } from 'rtl-test-generator/utils/helpers';
+import { generateVariableName } from './utils/helpers';
 
 const getLeafNodes = (container: Element) =>
   Array.from(container.getElementsByTagName('*'))?.filter((node: Element) => node?.children?.length === 0 && node?.textContent?.trim() !== '');
