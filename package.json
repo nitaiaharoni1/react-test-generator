@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/nitaiaharoni1/rtl-test-generator.git"
   },
-  "author": "",
+  "author": "Nitai Aharoni <nitaiaharoni1@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/nitaiaharoni1/rtl-test-generator/issues"
