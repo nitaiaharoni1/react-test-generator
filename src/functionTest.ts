@@ -14,7 +14,7 @@ import { ITest } from './interfaces/TestParams';
 import Handlebars from 'handlebars';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 // @ts-ignore
-import { DiffDOM } from 'diff-dom';
+import { DiffDOM } from './diff-dom';
 import { IDiff } from './interfaces/IDiff';
 
 const dd = new DiffDOM({
