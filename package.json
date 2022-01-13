@@ -2,7 +2,7 @@
   "name": "rtl-test-generator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "dist/index.js",
