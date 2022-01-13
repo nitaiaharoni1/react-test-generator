@@ -2,7 +2,7 @@
 import fs from 'fs';
 
 import { render } from '@testing-library/react';
-import { ComponentType, JSXElementConstructor, ReactElement } from 'react';
+import React, { ComponentType, JSXElementConstructor, ReactElement } from 'react';
 import Handlebars from 'handlebars';
 import { fullTestTemplate } from './templates';
 import { generateSmokeTest } from './smokeTest';
@@ -13,8 +13,7 @@ import { ITest } from './interfaces/TestParams';
 import callerPath from 'caller-path';
 import { getResultText } from './utils/helpers';
 import { ITestOptions } from './interfaces/ITestOptions';
-
-const beautify = require('js-beautify').html;
+import { html } from 'js-beautify';
 
 let test: ITest;
 let path: string = '';
@@ -27,7 +26,7 @@ export const initTest = (Component: JSXElementConstructor<any>, props: IProps = 
   const wrapperName = wrapper ? wrapper.name : '';
   const debugFileName = `${Component.name}-props#${props.index}${wrapperName ? `-${wrapperName}` : ''}.html`;
   const debugPath = `${path}/${debugFileName}`;
-  const htmlString = beautify(innerHTML);
+  const htmlString = html(innerHTML);
   fs.writeFileSync(debugPath, htmlString);
   const component: ReactElement = <Component {...props}/>;
   const { name } = Component;
