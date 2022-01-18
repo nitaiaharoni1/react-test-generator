@@ -1,13 +1,39 @@
-export const MODIFIED_ATTRIBUTE_ACTION = 'modifyAttribute';
-export const ADD_ATTRIBUTE_ACTION = 'addAttribute';
-export const REMOVE_ATTRIBUTE_ACTION = 'removeAttribute';
-export const MODIFIED_TEXT_ACTION = 'modifyTextElement';
-export const ADD_ELEMENT = 'addElement';
-export const ADD_TEXT_ELEMENT = 'addTextElement';
-export const REPLACE_ELEMENT = 'replaceElement';
+export const rtlCconstants = {
+  MODIFIED_ATTRIBUTE_ACTION: 'modifyAttribute',
+  ADD_ATTRIBUTE_ACTION: 'addAttribute',
+  REMOVE_ATTRIBUTE_ACTION: 'removeAttribute',
+  MODIFIED_TEXT_ACTION: 'modifyTextElement',
+  ADD_ELEMENT: 'addElement',
+  REMOVE_ELEMENT: 'removeElement',
+  REMOVE_TEXT_ELEMENT: 'removeTextElement',
+  ADD_TEXT_ELEMENT: 'addTextElement',
+  REPLACE_ELEMENT: 'replaceElement',
+  MODIFY_VALUE: 'modifyValue',
+  MODIFY_CHECKED: 'modifyChecked',
+  MODIFY_SELECTED: 'modifySelected',
 
-export const CLASS_ATTRIBUTE = 'class';
-export const STYLE_ATTRIBUTE = 'style';
+  CLASS_ATTRIBUTE: 'class',
+  STYLE_ATTRIBUTE: 'style',
 
-export const TESTED_DIFF_ACTIONS = [ADD_TEXT_ELEMENT, MODIFIED_ATTRIBUTE_ACTION, ADD_ATTRIBUTE_ACTION, REMOVE_ATTRIBUTE_ACTION, MODIFIED_TEXT_ACTION];
-export const TESTED_DIFF_ATTRIBUTE_NAMES = [CLASS_ATTRIBUTE, STYLE_ATTRIBUTE];
+  TO_BE_IN_THE_DOCUMENT: 'toBeInTheDocument',
+  TO_HAVE_LENGTH: 'toHaveLength',
+  TO_HAVE_ATTRIBUTE: 'toHaveAttribute',
+  TO_HAVE_BEEN_CALLED_TIMES: 'toHaveBeenCalledTimes',
+  TO_HAVE_TEST_CONTENT: 'toHaveTextContent',
+
+};
+
+export const TESTED_DIFF_ACTIONS = [
+  rtlCconstants.REPLACE_ELEMENT,
+  rtlCconstants.ADD_ELEMENT,
+  rtlCconstants.ADD_TEXT_ELEMENT,
+  rtlCconstants.MODIFIED_ATTRIBUTE_ACTION,
+  rtlCconstants.ADD_ATTRIBUTE_ACTION,
+  rtlCconstants.REMOVE_ATTRIBUTE_ACTION,
+  rtlCconstants.MODIFIED_TEXT_ACTION,
+];
+
+export const TESTED_DIFF_ATTRIBUTE_NAMES = [
+  rtlCconstants.CLASS_ATTRIBUTE,
+  rtlCconstants.STYLE_ATTRIBUTE,
+];

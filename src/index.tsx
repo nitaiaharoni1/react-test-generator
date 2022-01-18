@@ -1,96 +1,77 @@
-/* eslint-disable no-param-reassign, prefer-const */
+/* eslint-disable prefer-const */
 import fs from 'fs';
 
 import { render } from '@testing-library/react';
-import React, { ComponentType, JSXElementConstructor, ReactElement } from 'react';
-import Handlebars from 'handlebars';
-import { fullTestTemplate } from './templates';
-import { generateSmokeTest } from './smokeTest';
-import { generateFunctionTests } from './functionTest';
-import { cloneDeep, uniqBy } from 'lodash';
-import { IProps } from './interfaces/IProps';
-import { ITest } from './interfaces/TestParams';
-// import callerPath from 'caller-path';
-import { getResultText } from './utils/helpers';
-import { ITestOptions } from './interfaces/ITestOptions';
-import { html } from 'js-beautify';
+import { JSXElementConstructor, ReactElement } from 'react';
+import { isEmpty, uniq } from 'lodash';
+import callerPath from 'caller-path';
+import { getPropsString, printTest } from 'rtl-test-generator/src/utils/helpers';
+import { getFunctionTestsParams } from 'rtl-test-generator/src/functionTest';
+import { DescribeParams } from 'rtl-test-generator/src/models/DescribeParams/DescribeParams';
+import { getSmokeTestParams } from 'rtl-test-generator/src/smokeTest';
+import { ITest } from 'rtl-test-generator/src/interfaces/ITest';
+import {
+  IPropsTestPermutations,
+  ITestOptions,
+  ITestOptionsPermutation,
+  IWrapperTestPermutaions,
+} from 'rtl-test-generator/src/interfaces/ITestOptions';
 
-let testConf: ITest;
-let path: string = '';
+// @ts-ignore
+let test: ITest = {};
 
-export const initTest = (Component: JSXElementConstructor<any>, props: IProps = {}, wrapper: ComponentType | undefined = undefined): ITest => {
-  const options = wrapper ? { wrapper } : {};
-  const { container, debug } = render(<Component {...props}/>, { ...options });
-  const { innerHTML } = container;
-  if (!innerHTML) throw new Error('Something went wrong. The component did not render. Probably something is worng with the props or providers');
-  const wrapperName = wrapper ? wrapper.name : '';
-  const debugFileName = `${Component.name}-props#${props.index}${wrapperName ? `-${wrapperName}` : ''}.html`;
-  const debugPath = `${path}/${debugFileName}`;
-  const htmlString = html(innerHTML);
-  fs.writeFileSync(debugPath, htmlString);
+export const generate = (Component: JSXElementConstructor<any>, testOptions?: ITestOptions) => {
+  const testPermutations = getTestOptionsPermutations(testOptions);
+  const describes = testPermutations.map((testPermutation) => getDescribeParams(Component, testPermutation));
+  const templateParams = { describes, component: test.name };
+  printTest(templateParams, test);
+};
+
+export const initTest = (Component: JSXElementConstructor<any>, testPermutation: ITestOptionsPermutation): ITest => {
+  const path = `${callerPath()?.split('/').slice(0, -1).join('/')}/tests`;
+  if (!fs.existsSync(path)) fs.mkdirSync(path);
+  const { props, wrapper } = testPermutation;
+  const options = wrapper ? { wrapper } : undefined;
+  const { container, debug } = render(<Component {...props}/>, options);
   const component: ReactElement = <Component {...props}/>;
   const { name } = Component;
-  return cloneDeep({
+  return {
+    path,
     component,
+    debug,
     props,
     options,
-    container,
-    debug,
+    containerNew: container,
+    containerOld: container.cloneNode(true) as Element,
     name,
-  });
+  };
 };
 
-const printTest = (templateParams: any) => {
-  const template = Handlebars.compile(fullTestTemplate);
-  const result = template(templateParams);
-  const resultText = getResultText(result);
-  const testPath = `${path}/${testConf.name}.testConf.tsx`;
-  fs.writeFileSync(testPath, resultText);
+const getDescribeParams = (Component: JSXElementConstructor<any>, testPermutation: ITestOptionsPermutation): DescribeParams => {
+  const { wrapper, props } = testPermutation;
+  test = initTest(Component, testPermutation);
+  const smokeTestContent = getSmokeTestParams(test);
+  const functionTests = getFunctionTestsParams(test);
+  const propsStr = getPropsString(props);
+  return new DescribeParams([smokeTestContent, ...functionTests], propsStr, wrapper?.name);
 };
 
-const iteratePropsArray = (propsArray: IProps[], Component: JSXElementConstructor<any>, wrapper?: ComponentType) =>
-  propsArray.map((props: IProps, propIndex: number) => {
-    props.index = propIndex;
-    testConf = initTest(Component, props, wrapper);
-    const smokeTestContent = generateSmokeTest(testConf);
-    const functionTests = generateFunctionTests(testConf);
-    const propsStr = JSON.stringify(props, (k: any, v: any) => {
-      if (typeof v === 'function') {
-        return v.name === 'mockConstructor' ? 'jest.fn()' : v.name;
-      }
-      return v;
-    });
-    const describe = {
-      tests: [smokeTestContent, ...functionTests],
-      componentName: testConf.name,
-      propIndex: propIndex + 1,
-    };
-    // @ts-ignore
-    if (props && propsStr !== '{}') describe.props = propsStr;
-    // @ts-ignore
-    if (wrapper?.name) describe.wrapperName = wrapper.name;
-    return describe;
-  });
+const getTestOptionsPermutations = (testOptions: ITestOptions | undefined): ITestOptionsPermutation[] => {
+  if (!testOptions || isEmpty(testOptions)) return [{ wrapper: null, props: null }];
+  const { propsArr, wrappersArr, props, wrapper } = testOptions;
 
-export const getDescribes = (propsArray: IProps[], Component: JSXElementConstructor<any>, wrappers?: ComponentType[]) => {
-  let describes;
-  if (!wrappers || wrappers?.length === 0) {
-    describes = iteratePropsArray(propsArray, Component).flat();
-  } else {
-    describes = wrappers?.map((wrapper) => iteratePropsArray(propsArray, Component, wrapper)).flat();
-  }
-  return describes;
+  let propsPermutations: IPropsTestPermutations[] = propsArr || [];
+  let wrapperPermutations: IWrapperTestPermutaions[] = wrappersArr || [];
+
+  if (!isEmpty(props)) propsPermutations.push(props as IPropsTestPermutations);
+  if (wrapper) wrapperPermutations.push(wrapper);
+
+  if (isEmpty(propsPermutations)) propsPermutations.push(null);
+  if (isEmpty(wrapperPermutations)) wrapperPermutations.push(null);
+
+  propsPermutations = uniq(propsPermutations);
+  return wrapperPermutations.flatMap((wrapr) =>
+    propsPermutations.map((prop) =>
+      ({ wrapper: wrapr, props: prop })));
 };
 
-export const generate = (Component: JSXElementConstructor<any>, testOptions: ITestOptions) => {
-  let { propsArray = [{}], wrappers } = testOptions;
-  path = '.'; //`${callerPath()?.split('/').slice(0, -1).join('/')}`;
-  if (propsArray.length === 0) propsArray = [{}];
-  propsArray = uniqBy(propsArray, JSON.stringify);
-  const describes = getDescribes(propsArray, Component, wrappers);
-  const uniqueDescribes = uniqBy(describes, (e: any) => e.tests?.map((testConf: any) => testConf.content).join(' '));
-  printTest({
-    describes: uniqueDescribes,
-    componentName: testConf.name,
-  });
-};

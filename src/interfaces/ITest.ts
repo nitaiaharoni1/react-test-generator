@@ -2,7 +2,10 @@ import { IRender } from 'rtl-test-generator/src/interfaces/IRender';
 import { IProps } from 'rtl-test-generator/src/interfaces/IProps';
 
 export interface ITest extends IRender {
-  container: Element;
+  containerOld: Element;
+  containerNew: Element;
   name: string;
-  props: IProps;
+  props?: IProps | null;
+  debug: () => void;
+  path: string;
 }

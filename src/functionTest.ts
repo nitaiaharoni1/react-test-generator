@@ -1,167 +1,43 @@
-/* eslint-disable no-param-reassign, max-len */
-import {
-  generateDiffQuerySelector,
-  generateDiffVariableName,
-  generateQuerySelector,
-  generateVariableName,
-  parseClassNameCleanCss,
-  shouldIgnoreDiff,
-  valuesDelta
-} from './utils/helpers';
-import { functionTestContentTemplate } from './templates';
-import { MODIFIED_TEXT_ACTION } from './utils/constants';
-import { ITest } from './interfaces/TestParams';
-import Handlebars from 'handlebars';
-import { cleanup, fireEvent, render } from '@testing-library/react';
-// @ts-ignore
-import { DiffDOM } from './diff-dom';
-import { IDiff } from './interfaces/IDiff';
-
-const dd = new DiffDOM({
-  postVirtualDiffApply: (object: any) => {
-    object.diff.node = object.node;
-  },
-});
+import { generateVariableName, getFunctionElems, printStep } from 'rtl-test-generator/src/utils/helpers';
+import { range } from 'lodash';
+import { ItTestParams } from 'rtl-test-generator/src/models/ItTestParams/ItTestParams';
+import { ItTestParamsFunctions } from 'rtl-test-generator/src/models/ItTestParams/ItTestParamsFunctions';
+import { Diff } from 'rtl-test-generator/src/models/Diff/Diff';
+import { fireEvent, render } from 'setupTests';
+import { Diffs } from 'rtl-test-generator/src/models/Diffs/Diffs';
+import { ITest } from 'rtl-test-generator/src/interfaces/ITest';
+import { cleanup } from '@testing-library/react';
+import { dd } from 'rtl-test-generator/src/initDomDiff';
 
 let test: ITest;
+let functionNodeName: string;
+let functionNodeIndex: number;
 
-export const generateFunctionTests = (initTest: ITest) => {
+export const getFunctionTestsParams = (initTest: ITest): ItTestParams[] => {
   test = initTest;
-  return getFunctionElems()?.map((funcNode: any, index: number) => generateFunctionTest(index)).filter(Boolean);
+  const functionsNodesNum = getFunctionElems(test.containerNew)?.length || 0;
+  return range(functionsNodesNum).map((_, index: number) => getIItTestParams(index));
 };
 
-const generateFunctionTest = (index: number) => {
-  const funcNode = getFunctionElems()[index];
-
-  const functionElemVariable = generateVariableName(funcNode);
-  const functionElemSelector = generateQuerySelector(funcNode);
-
-  const diffs = fireEventAndGetDiffs(funcNode);
-
-  const itTest = getFunctionElemItTest(funcNode, diffs);
-  let itTestEnriched: object | undefined;
-  if (itTest) {
-    itTestEnriched = {
-      ...itTest,
-      functionElemVariable,
-      functionElemSelector,
-    };
-  }
-  restartContainer();
-  return itTestEnriched;
+const getIItTestParams = (index: number): ItTestParams => {
+  const functionNode = getFunctionElems(test.containerNew)[index];
+  functionNodeName = generateVariableName(functionNode);
+  functionNodeIndex = index;
+  const diffs = fireEventAndGetDiffs(functionNode);
+  const itTestName = `#${index}`;
+  return new ItTestParamsFunctions(test.containerNew, diffs, itTestName, functionNode);
 };
 
-const getFunctionElems = () => Array.from(test.container.getElementsByTagName('*'))?.filter((node: any) =>
-  node.onchange || node.onclick || node.onkeyup || node.onkeydown
-  || node.onkeypress || node.onmouseover || node.onmouseout
-  || node.onmouseenter || node.onmouseleave);
-
-const getFunctionElemItTest = (funcNode: Element, diffs: any) => {
-  const nodeName = generateVariableName(funcNode);
-  const functionElemDiffParams = getFunctionElemDiffParams(funcNode, diffs);
-  if (!functionElemDiffParams.length) return undefined;
-  const functionTestTemplate = Handlebars.compile(functionTestContentTemplate);
-  const functionTestContent = functionTestTemplate({ diffs: functionElemDiffParams });
-  return {
-    name: `${'Click'} ${nodeName}`,
-    content: functionTestContent,
-  };
-};
-
-const getFunctionElemDiffParams = (funcNode: Element, diffs: any[]) => {
-  const diffsParams = diffs.map((diff: any) => getFunctionsTestParams(funcNode, diff)).filter(Boolean);
-  const diffParamsParsed: any = [];
-  diffsParams.forEach((diffParam: any) => {
-    if (diffParam.byText) {
-      const elementsWithSameText = Array.from(test.container.querySelectorAll('*')).filter((el) => el.textContent === diffParam.selector)?.length;
-      if (elementsWithSameText > 1) {
-        diffParam.count = elementsWithSameText;
-      }
-      diffParamsParsed?.push(diffParam);
-    } else {
-      const foundSelectorParamsParsed = diffParamsParsed.find((diffParsed: any) =>
-        diffParsed.selector && diffParam?.selector && diffParsed.selector === diffParam?.selector);
-      const isSameAttribute = foundSelectorParamsParsed?.attributes?.[0].name === diffParam?.attributes?.[0]?.name;
-      if (foundSelectorParamsParsed && !isSameAttribute) {
-        diffParam.attributes[0].variable = foundSelectorParamsParsed.variable;
-        foundSelectorParamsParsed.attributes?.push(diffParam?.attributes?.[0]);
-      } else {
-        diffParamsParsed?.push(diffParam);
-      }
-    }
-  });
-
-  return diffParamsParsed;
-};
-
-const findDiffDelte = (diff: IDiff): { delta?: string, isNegative?: boolean } => {
-  const { newValue, oldValue } = diff;
-  const nValue = parseClassNameCleanCss(newValue);
-  const oValue = parseClassNameCleanCss(oldValue);
-  if (nValue === oValue) return {};
-  const positiveDelta = valuesDelta(oldValue, newValue);
-  if (positiveDelta) {
-    return {
-      isNegative: false,
-      delta: positiveDelta,
-    };
-  }
-  const negativeDelta = valuesDelta(newValue, oldValue);
-  return {
-    isNegative: true,
-    delta: negativeDelta,
-  };
-};
-
-const getFunctionsTestParams = (funcNode: Element, diff: any) => {
-  if (shouldIgnoreDiff(diff)) return undefined;
-  const { name, newValue, action } = diff;
-  const byText = [MODIFIED_TEXT_ACTION].includes(action);
-  let params = {};
-  const variable = generateDiffVariableName(diff);
-  if (!byText) {
-    let classParams = {};
-    if (name === 'class') {
-      const diffDelta = findDiffDelte(diff);
-      if (!diffDelta.delta) return undefined;
-      classParams = {
-        isClass: true,
-        isNegative: diffDelta.isNegative ? '.not' : '',
-        value: diffDelta.delta,
-      };
-    }
-    const selector = generateDiffQuerySelector(diff);
-    if (!newValue) return undefined;
-    params = {
-      selector,
-      attributes: [
-        {
-          name,
-          value: newValue,
-          variable,
-          ...classParams,
-        },
-      ],
-    };
-  }
-  return {
-    selector: newValue,
-    variable,
-    byText,
-    ...params,
-  };
-};
-
-const restartContainer = () => {
-  const { component, options } = test;
-  cleanup();
-  const { container: newContainer } = render(component, options);
-  test.container = newContainer;
-};
-
-const fireEventAndGetDiffs = (funcNode: Element): any => {
-  const { component, options, container } = test;
-  const { container: newContainer } = render(component, options);
+const fireEventAndGetDiffs = (funcNode: Element): Diff[] => {
+  const { component, options, debug } = test;
+  printStep(debug, `before fire event - ${functionNodeName}#${functionNodeIndex}`);
   fireEvent.click(funcNode);
-  return dd.diff(newContainer, container);
+  printStep(debug, `after fire event - ${functionNodeName}#${functionNodeIndex}`);
+  test.containerOld = test.containerNew.cloneNode(true) as Element;
+  cleanup();
+  const { container } = render(component, options);
+  test.containerNew = container;
+  const rawDiffs = dd.diff(test.containerNew, test.containerOld);
+  return (new Diffs(test.containerNew, rawDiffs)).checks;
 };
+

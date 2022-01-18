@@ -1,7 +1,17 @@
 import { ComponentType } from 'react';
-import { IProps } from '../interfaces/IProps';
+import { IProps } from 'rtl-test-generator/src/interfaces/IProps';
 
 export interface ITestOptions {
-  wrappers?: ComponentType[],
-  propsArray?: IProps[],
+  wrappersArr?: ComponentType[],
+  wrapper?: ComponentType,
+  propsArr?: IProps[],
+  props?: IProps,
+}
+
+export type IWrapperTestPermutaions = ComponentType | null;
+export type IPropsTestPermutations = IProps | null;
+
+export interface ITestOptionsPermutation {
+  wrapper: IWrapperTestPermutaions,
+  props: IPropsTestPermutations,
 }

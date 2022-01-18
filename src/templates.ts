@@ -1,82 +1,36 @@
-const renderComponentTemplate = 'const { container } = renderComponent();';
-const querySelectorTemplate = "const {{this.variable}} = container.querySelector('{{this.selector}}');";
-const querySelectorFireEventTemplate = "const {{this.functionElemVariable}} = container.querySelector('{{this.functionElemSelector}}') || new Element();";
-const fireEventClickTemplate = 'fireEvent.click({{this.functionElemVariable}});';
-const getByAttributeTemplate = "const {{this.variable}} = screen.getBy{{attribute}}('{{this.selector}}');";
-const getByTextTemplate = "const {{this.variable}} = screen.getByText('{{this.selector}}');";
-const getAllByTextTemplate = "const {{this.variable}} = screen.getAllByText('{{this.selector}}');";
-const toBeInTheDocumentTemplate = 'expect({{this.variable}}).toBeInTheDocument();';
-const toHaveLengthTemplate = 'expect({{this.variable}}).toHaveLength({{count}});';
-const toHaveTextContentTemplate = 'expect({{this.variable}}).toHaveTextContent({{this.selector}});';
-const toHaveAttributeTemplate = "expect({{this.variable}}).toHaveAttribute('{{this.name}}', '{{this.value}}');";
-const toHaveClassExactFalseTemplate = "expect({{this.variable}}){{this.isNegative}}.toHaveClass('{{this.value}}', { exact: false });";
+/* eslint-disable @typescript-eslint/quotes, max-len */
 
-const typeofComponentTemplate = '<typeof Component>';
-const componentPropsTemplate = 'ComponentProps<typeof {{this.componentName}}>';
-const componentsWithPropsTemplate = '<{{this.componentName}}{{#if this.props}} {...props}{{/if}}/>';
+const componentPropsTemplate = 'ComponentProps<typeof {{this.component}}>';
 
-const testItTemplate = `
-  test('Should {{this.name}}', () => {
-    ${renderComponentTemplate}
-    {{#if this.functionElemVariable}}
-    ${querySelectorFireEventTemplate}
-    ${fireEventClickTemplate}
-    {{/if}}
-    {{{this.content}}}
-  });`;
-
-export const describeTemplate = `
-describe('{{this.componentName}} - Props: #{{propIndex}}{{#if this.wrapperName}} - Wrapper: {{this.wrapperName}}{{/if}}', () => {
-  {{#if this.props}}const props: ${componentPropsTemplate} = {{{this.props}}};{{/if}}
-  const renderComponent = () => render(${componentsWithPropsTemplate}{{#if this.wrapperName}}, { wrapper: {{this.wrapperName}} }{{/if}});
-
-  {{#tests}}
-      ${testItTemplate}
-  {{/tests}}
-});`;
+const expect = `expect({{this.variable}}){{#if this.isNegative}}.not{{/if}}.{{this.toHave}}({{#if this.name}}'{{this.name}}', {{/if}}{{#if this.value}}'{{this.value}}', {{/if}}{{#if this.notExact}}{ exact: false }{{/if}})`;
+const selector = `{{#selector}}const {{this.variable}} = {{#if this.isScreen}}screen.get{{#ifCond this.count '>' 1 }}All{{/ifCond}}ByText{{else}}container.querySelector{{/if}}(\`{{this.selector}}\`){{/selector}}`;
+const fire = `{{#fire}}fireEvent.{{this.event}}({{this.variable}}){{/fire}}`;
 
 export const fullTestTemplate = `
-import { ComponentProps } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+{{#if this.props}}import { ComponentProps } from 'react'{{/if}}
+import { fireEvent, render, screen } from '@testing-library/react'
 
 {{#describes}}
-${describeTemplate}
+    describe('{{@root.component}} - Props: #{{@index}}{{#if this.wrapper}} - Wrapper: {{this.wrapper}}{{/if}}', () => {
+        {{#if this.props}}const props: ${componentPropsTemplate} = {{{this.props}}}{{/if}}
+        const renderComponent = () => render(<{{@root.component}}{{#if this.props}} {...props}{{/if}}/>{{#if this.wrapper}}, { wrapper: {{this.wrapper}} }{{/if}})
+        
+        {{#tests}}
+            test('Should {{this.name}}', () => {
+                const { container } = renderComponent()
+                
+                {{#funcNode}}
+                  ${selector} || new Element()
+                  ${fire}
+                {{/funcNode}}
+                {{#checks}}
+                  ${selector}
+                  {{#expects}}
+                    ${expect}
+                  {{/expects}}
+                {{/checks}}
+            })
+        {{/tests}}
+    })
 {{/describes}}
-`;
-
-export const smokeTestContentTemplate = `
-{{#nodes}}
-
-    {{#if this.count}}
-    ${getAllByTextTemplate}
-    ${toHaveLengthTemplate}
-    {{else}}
-    ${getByTextTemplate}
-    ${toBeInTheDocumentTemplate}
-    {{/if}}
-
-{{/nodes}}`;
-
-export const functionTestContentTemplate = `
-{{#diffs}}
-    {{#if this.byText}}
-    {{#if this.count}}
-    ${getAllByTextTemplate}
-    ${toHaveLengthTemplate}
-    {{else}}
-    ${getByTextTemplate}
-    ${toBeInTheDocumentTemplate}
-    {{/if}}
-    {{else}}
-    ${querySelectorTemplate}
-    {{#attributes}}
-    {{#if this.isClass}}
-    ${toHaveClassExactFalseTemplate}
-    {{else}}
-    ${toHaveAttributeTemplate}
-    {{/if}}
-    {{/attributes}}
-    {{/if}}
-    
-{{/diffs}}
 `;
